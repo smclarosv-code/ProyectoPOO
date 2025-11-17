@@ -59,7 +59,7 @@ ALTER TABLE ventas_directas.Detalle_pedido
 ADD CONSTRAINT FK_Catalogo_DetallePedido
 FOREIGN KEY (id_productos) REFERENCES ventas_directas.productos(id)
 
-CREATE TABLE ventas_directas.Categoria (
+CREATE TABLE ventas_directas.categorias (
     id INT IDENTITY (1,1) PRIMARY KEY,
     nombre_categoria NVARCHAR (100) NOT NULL
 )
@@ -68,4 +68,19 @@ ALTER TABLE ventas_directas.productos
 ADD CONSTRAINT FK_Productos_Categoria
 FOREIGN KEY (id_categoria) REFERENCES ventas_directas.Categoria(id)
 
+INSERT INTO ventas_directas.usuarios (nombre_completo, telefono, correo)
+VALUES ('Ana Pérez', '98765432', 'ana.perez@example.com');
 
+INSERT INTO ventas_directas.usuarios (nombre_completo, telefono, correo)
+VALUES ('Edwin Requeno', '98765432', 'edwin.requeno@example.com');
+
+SELECT * FROM ventas_directas.usuarios;
+
+--Modificando el nombre de la tabla categorias  
+EXEC sp_rename 'ventas_directas.categoria', 'categorias';
+
+--Cambiando Atributo de la tabla de stock
+EXEC sp_rename 
+    'ventas_directas.stock.id_productos', 
+    'id_producto', 
+    'COLUMN';
