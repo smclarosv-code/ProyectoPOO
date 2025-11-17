@@ -1,33 +1,37 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, Request, status
 from models.productos import Productos
-
-from controllers.stock import (
-    get_one_producto,
-    get_all_productos,
-    create_producto,
-    update_producto,
-    delete_producto
+from controllers.productos import (
+    create_product,
+    get_all_p,
+    get_one_p,
+    delete_product,
+    update_product,
 )
 
-router = APIRouter(prefix="/productos")
+router = APIRouter(prefix = "/productos")
 
-@router.get("/{id}", tags=["Productos"], status_code=status.HTTP_200_OK)
-async def get_one_categoria_endpoint(id: int):
-    result: Productos = await get_one_producto(id)
+@router.get( "/" , tags=["Productos"])
+async def get_all_products():
+    result = await get_all_p()
     return result
 
-@router.get("/", tags=["Productos"], status_code=status.HTTP_200_OK)
-async def get_all_productos_endpoint():
-    result = await get_all_productos()
+@router.get("/{id}", tags=["Productos"])
+async def get_one_product( id: int ):
+    result: Productos = await get_one_p(id)
     return result
 
-@router.post("/", tags=["Productos"], status_code=status.HTTP_201_CREATED)
-async def create_new_producto(productos_data: Productos):
-    result = await create_producto(productos_data)
+@router.post( "/" , tags = ["Productos"])
+async def create_new_product(producto_data: Productos):
+    result = await create_product(producto_data)
     return result
 
-@router.put("/{id}", tags=["Producto"], status_code=status.HTTP_200_OK)
-async def update_producto_information(id: int, producto_data: Productos):
+@router.put("/{id}", tags=["Productos"])
+async def update_product_information( producto_data: Productos , id: int ):
     producto_data.id = id
-    result = await update_producto(producto_data)
+    result = await update_product(producto_data)
     return result
+
+@router.delete("/{id}", tags=["Productos"], status_code=status.HTTP_204_NO_CONTENT)
+async def delete_existing_product( id: int ):
+    status: str =  await delete_product(id)
+    return status
