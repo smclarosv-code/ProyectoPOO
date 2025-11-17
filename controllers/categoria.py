@@ -1,61 +1,57 @@
-from fastapi import HTTPException
-from utils.database import execute_query_json
-from models.categoria import Categoria
 import json
+import logging
 
+from fastapi import HTTPException
 
-# -------------------------------------------------------------------
-# GET ONE
-# -------------------------------------------------------------------
-async def get_one_categoria(id: int) -> Categoria:
+from models.categoria import Categoria
+from utils.database import execute_query_json
 
-    sql = """
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def get_one_ctg( id: int ) -> Categoria:
+
+    selectscript = """
         SELECT [id]
             ,[nombre_categoria]
-        FROM ventas_directas.Categoria
+        FROM [ventas_directas].[categorias]
         WHERE id = ?
     """
 
+    params = [id]
+    result_dict=[]
     try:
-        result = await execute_query_json(sql, params=[id])
-        data = json.loads(result)
+        result = await execute_query_json(selectscript, params=params)
+        result_dict = json.loads(result)
 
-        if len(data) == 0:
-            raise HTTPException(status_code=404, detail="Categoría no encontrada")
-
-        return data[0]
+        if len(result_dict) > 0:
+            return result_dict[0]
+        else:
+            raise HTTPException(status_code=404, detail=f"categoria no encontrada")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"Error en la base de datos: { str(e) }")
 
+async def get_all_ctg() -> list[Categoria]:
 
-# -------------------------------------------------------------------
-# GET ALL
-# -------------------------------------------------------------------
-async def get_all_categoria() -> list[Categoria]:
-
-    sql = """
+    selectscript = """
         SELECT [id]
             ,[nombre_categoria]
-        FROM ventas_directas.Categoria
+        FROM [ventas_directas].[categorias]
     """
 
+    result_dict=[]
     try:
-        result = await execute_query_json(sql)
-        return json.loads(result)
-
+        result = await execute_query_json(selectscript)
+        result_dict = json.loads(result)
+        return result_dict
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: { str(e) }")
 
+async def create_category( categoria: Categoria ) -> Categoria:
 
-# -------------------------------------------------------------------
-# CREATE CATEGORIA
-# -------------------------------------------------------------------
-async def create_categoria(categoria: Categoria) -> Categoria:
-
-    sql = """
-        INSERT INTO ventas_directas.Categoria
-            ([nombre_categoria])
+    sqlscript: str = """
+        INSERT INTO [ventas_directas].[categorias] ([nombre_categoria])
         VALUES (?);
     """
 
@@ -63,75 +59,72 @@ async def create_categoria(categoria: Categoria) -> Categoria:
         categoria.nombre_categoria
     ]
 
+    insert_result = None
     try:
-        await execute_query_json(sql, params=params, needs_commit=True)
-
+        insert_result = await execute_query_json( sqlscript, params, needs_commit=True )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: { str(e) }")
 
-    # retornar el registro insertado
-    sql_find = """
+    sqlfind: str = """
         SELECT [id]
             ,[nombre_categoria]
-        FROM ventas_directas.Categoria
+        FROM [ventas_directas].[categorias]
         WHERE nombre_categoria = ?;
     """
 
+    params = [categoria.nombre_categoria]
+
+    result_dict=[]
     try:
-        result = await execute_query_json(sql_find, params=[categoria.nombre_categoria])
-        data = json.loads(result)
-        return data[0] if len(data) > 0 else {}
+        result = await execute_query_json(sqlfind, params=params)
+        result_dict = json.loads(result)
 
+        if len(result_dict) > 0:
+            return result_dict[0]
+        else:
+            return []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: { str(e) }")
+    
+async def update_ctg( categoria: Categoria ) -> Categoria:
 
+    dict = categoria.model_dump(exclude_none=True)
 
-# -------------------------------------------------------------------
-# UPDATE CATEGORIA
-# -------------------------------------------------------------------
-async def update_categoria(categoria: Categoria) -> Categoria:
+    keys = [ k for k in  dict.keys() ]
+    keys.remove('id')
+    variables = " = ?, ".join(keys)+" = ?"
 
-    data = categoria.model_dump(exclude_none=True)
-
-    if "id" not in data:
-        raise HTTPException(status_code=400, detail="El ID es requerido para actualizar")
-
-    keys = list(data.keys())
-    keys.remove("id")
-
-    variables = " = ?, ".join(keys) + " = ?"
-
-    sql = f"""
-        UPDATE ventas_directas.Categoria
+    updatescript = f"""
+        UPDATE [ventas_directas].[categorias]
         SET {variables}
-        WHERE id = ?
+        WHERE [id] = ?;
     """
 
-    params = [data[k] for k in keys]
-    params.append(categoria.id)
+    params = [ dict[v] for v in keys ]
+    params.append( categoria.id )
 
+    update_result = None
     try:
-        await execute_query_json(sql, params=params, needs_commit=True)
-
+        update_result = await execute_query_json( updatescript, params, needs_commit=True )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
-    return await get_one_categoria(categoria.id)
-
-
-# -------------------------------------------------------------------
-# DELETE CATEGORIA
-# -------------------------------------------------------------------
-async def delete_categoria(id: int) -> str:
-
-    sql = """
-        DELETE FROM ventas_directas.Categoria
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: { str(e) }")
+    sqlfind: str = """
+        SELECT [id]
+            ,[nombre_categoria]
+        FROM [ventas_directas].[categorias]
         WHERE id = ?;
     """
 
-    try:
-        await execute_query_json(sql, params=[id], needs_commit=True)
-        return "DELETED"
+    params = [categoria.id]
 
+    result_dict=[]
+    try:
+        result = await execute_query_json(sqlfind, params=params)
+        result_dict = json.loads(result)
+
+        if len(result_dict) > 0:
+            return result_dict[0]
+        else:
+            return []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: { str(e) }")
