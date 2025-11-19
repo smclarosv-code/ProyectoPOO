@@ -1,37 +1,37 @@
 from fastapi import APIRouter, HTTPException, Request, status
-from models.stock import Stock
-from controllers.stock import (
-    get_all_stocks,
-    get_one_stck,
-    create_stock,
-    delete_stock,
-    update_stock
+from models.usuarios import Usuarios
+from controllers.usuarios import (
+    create_user,
+    update_user,
+    get_all_u,
+    get_one_u,
+    delete_user
 )
 
-router = APIRouter(prefix = "/stock")
+router = APIRouter(prefix = "/usuarios")
 
-@router.get( "/" , tags=["Stock"])
-async def get_products_stock():
-    result = await get_all_stocks()
+@router.get( "/" , tags=["Usuarios"], status_code=status.HTTP_200_OK)
+async def get_all_users():
+    result = await get_all_u()
     return result
 
-@router.get("/{id}", tags=["Stock"])
-async def get_one_stock( id: int ):
-    result: Stock =  await get_one_stck(id)
+@router.get("/{id}", tags=["Usuarios"], status_code=status.HTTP_200_OK)
+async def get_one_user( id: int ):
+    result: Usuarios =  await get_one_u(id)
     return result
 
-@router.post( "/" , tags = ["Stock"])
-async def create_new_stock(stock_data: Stock):
-    result = await create_stock(stock_data)
+@router.post( "/" , tags = ["Usuarios"], status_code=status.HTTP_201_CREATED)
+async def create_new_user(usuario_data: Usuarios):
+    result = await create_user(usuario_data)
     return result
 
-@router.put("/{id}", tags=["Stock"])
-async def update_stock_information( stock_data: Stock , id: int ):
-    stock_data.id = id
-    result = await update_stock(stock_data)
+@router.put("/{id}", tags=["Usuarios"], status_code=status.HTTP_200_OK)
+async def update_user_information( usuario_data: Usuarios , id: int ):
+    usuario_data.id = id
+    result = await update_user(usuario_data)
     return result
 
-@router.delete("/{id}", tags=["Stock"], status_code=status.HTTP_204_NO_CONTENT)
-async def delete_product_stock( id: int ):
-    status: str =  await delete_stock(id)
+@router.delete("/{id}", tags=["Usuarios"], status_code=status.HTTP_204_NO_CONTENT)
+async def delete_existing_user( id: int ):
+    status: str =  await delete_user(id)
     return status

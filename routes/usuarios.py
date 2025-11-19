@@ -1,13 +1,3 @@
-from fastapi import APIRouter
-from fastapi.concurrency import run_in_threadpool
-from models.usuarios import Usuarios
-from controllers.usuarios import create_user
-
-router = APIRouter(prefix="/usuarios")
-
-@router.post("/", tags=["Usuarios"])
-async def create_new_user(usuario_data: Usuarios):
-    return await run_in_threadpool(create_user, usuario_data)
 from fastapi import APIRouter, HTTPException, Request, status
 from models.usuarios import Usuarios
 from controllers.usuarios import (
@@ -20,22 +10,22 @@ from controllers.usuarios import (
 
 router = APIRouter(prefix = "/usuarios")
 
-@router.get( "/" , tags=["Usuarios"])
+@router.get( "/" , tags=["Usuarios"], status_code=status.HTTP_200_OK)
 async def get_all_users():
     result = await get_all_u()
     return result
 
-@router.get("/{id}", tags=["Usuarios"])
+@router.get("/{id}", tags=["Usuarios"], status_code=status.HTTP_200_OK)
 async def get_one_user( id: int ):
     result: Usuarios =  await get_one_u(id)
     return result
 
-@router.post( "/" , tags = ["Usuarios"])
+@router.post( "/" , tags = ["Usuarios"], status_code=status.HTTP_201_CREATED)
 async def create_new_user(usuario_data: Usuarios):
     result = await create_user(usuario_data)
     return result
 
-@router.put("/{id}", tags=["Usuarios"])
+@router.put("/{id}", tags=["Usuarios"], status_code=status.HTTP_200_OK)
 async def update_user_information( usuario_data: Usuarios , id: int ):
     usuario_data.id = id
     result = await update_user(usuario_data)
